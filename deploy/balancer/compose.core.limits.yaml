@@ -1,0 +1,12 @@
+# Лимиты памяти для группы CORE. Накладывается поверх compose.core.yaml.
+# Защищает ноут от перегруза: контейнер не сожрёт больше mem_limit.
+# mem_limit поддерживается `docker compose` (Compose v2) без swarm.
+services:
+  kafka:
+    mem_limit: 1024m
+  core:
+    mem_limit: 640m
+  frontend:
+    mem_limit: 128m
+  postgres:
+    mem_limit: 256m

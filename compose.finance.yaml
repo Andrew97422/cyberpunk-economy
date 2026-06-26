@@ -1,0 +1,150 @@
+# ── Machine 2 (FINANCE domain) ────────────────────────────────────────────
+# banking + account + access services, each with its own postgres.
+# Connects to the Kafka broker on the CORE machine over the LAN.
+#
+# REQUIRED: set CORE_HOST in .env to the CORE machine's LAN IP (machine 1).
+#   docker compose -f compose.finance.yaml up -d
+
+services:
+  banking-postgres:
+    image: postgres:16
+    container_name: banking-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${BANKING_DB_NAME:-banking_db}
+      POSTGRES_USER: ${BANKING_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${BANKING_DB_PASSWORD:-postgres}
+    ports:
+      - "5433:5432"
+    volumes:
+      - banking_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${BANKING_DB_USER:-postgres} -d ${BANKING_DB_NAME:-banking_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  banking-service:
+    build:
+      context: ./main-server/banking-service
+      dockerfile: Dockerfile
+    container_name: banking-service-app
+    restart: unless-stopped
+    depends_on:
+      banking-postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8081
+      DB_HOST: banking-postgres
+      DB_PORT: 5432
+      DB_NAME: ${BANKING_DB_NAME:-banking_db}
+      DB_USER: ${BANKING_DB_USER:-postgres}
+      DB_PASSWORD: ${BANKING_DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
+      KAFKA_GROUP_ID: banking-group
+      JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
+    ports:
+      - "8081:8081"
+    networks:
+      - game_network
+
+  accounts-postgres:
+    image: postgres:16
+    container_name: accounts-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${ACCOUNTS_DB_NAME:-accounts_db}
+      POSTGRES_USER: ${ACCOUNTS_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${ACCOUNTS_DB_PASSWORD:-postgres}
+    ports:
+      - "5434:5432"
+    volumes:
+      - accounts_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${ACCOUNTS_DB_USER:-postgres} -d ${ACCOUNTS_DB_NAME:-accounts_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  account-service:
+    build:
+      context: ./main-server/account-service
+      dockerfile: Dockerfile
+    container_name: account-service-app
+    restart: unless-stopped
+    depends_on:
+      accounts-postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8082
+      DB_HOST: accounts-postgres
+      DB_PORT: 5432
+      DB_NAME: ${ACCOUNTS_DB_NAME:-accounts_db}
+      DB_USER: ${ACCOUNTS_DB_USER:-postgres}
+      DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
+      KAFKA_GROUP_ID: account-service
+      JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-admin}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-admin12345}
+    ports:
+      - "8082:8082"
+    networks:
+      - game_network
+
+  access-postgres:
+    image: postgres:16
+    container_name: access-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${ACCESS_DB_NAME:-access_db}
+      POSTGRES_USER: ${ACCESS_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${ACCESS_DB_PASSWORD:-postgres}
+    ports:
+      - "5435:5432"
+    volumes:
+      - access_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${ACCESS_DB_USER:-postgres} -d ${ACCESS_DB_NAME:-access_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  access-service:
+    build:
+      context: ./main-server/access-service
+      dockerfile: Dockerfile
+    container_name: access-service-app
+    restart: unless-stopped
+    depends_on:
+      access-postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8083
+      DB_HOST: access-postgres
+      DB_PORT: 5432
+      DB_NAME: ${ACCESS_DB_NAME:-access_db}
+      DB_USER: ${ACCESS_DB_USER:-postgres}
+      DB_PASSWORD: ${ACCESS_DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
+      KAFKA_GROUP_ID: access-service
+      JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
+    ports:
+      - "8083:8083"
+    networks:
+      - game_network
+
+volumes:
+  banking_postgres_data:
+  accounts_postgres_data:
+  access_postgres_data:
+
+networks:
+  game_network:
+    driver: bridge

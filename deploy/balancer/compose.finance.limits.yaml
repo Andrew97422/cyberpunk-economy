@@ -1,0 +1,14 @@
+# Лимиты памяти для группы FINANCE. Накладывается поверх compose.finance.yaml.
+services:
+  banking-service:
+    mem_limit: 512m
+  account-service:
+    mem_limit: 512m
+  access-service:
+    mem_limit: 512m
+  banking-postgres:
+    mem_limit: 256m
+  accounts-postgres:
+    mem_limit: 256m
+  access-postgres:
+    mem_limit: 256m

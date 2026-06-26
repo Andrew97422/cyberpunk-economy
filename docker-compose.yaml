@@ -1,0 +1,430 @@
+# Single-host orchestration: ONE Postgres (DB-per-service via separate databases)
+# + Kafka + gateway + 8 Kafka microservices + the unified frontend SPA (nginx).
+# Resource-optimised: 1 Postgres instead of 8, capped JVM heaps, kafka-ui off by default.
+# The SPA talks to the gateway same-origin via /api (nginx reverse-proxy -> core:8080).
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: game-postgres
+    restart: unless-stopped
+    command: ["postgres", "-c", "shared_buffers=96MB", "-c", "max_connections=60", "-c", "work_mem=4MB"]
+    environment:
+      POSTGRES_DB: ${DB_NAME:-game_core}
+      POSTGRES_USER: ${DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      # Creates the per-service databases on first init.
+      - ./deploy/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-postgres} -d ${DB_NAME:-game_core}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: game-core-kafka
+    restart: unless-stopped
+    ports:
+      - "9092:9092"
+    environment:
+      - KAFKA_HEAP_OPTS=-Xmx384m -Xms256m
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+      - KAFKA_LISTENERS=EXTERNAL://0.0.0.0:9092,INTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093
+      - KAFKA_ADVERTISED_LISTENERS=EXTERNAL://localhost:9092,INTERNAL://kafka:9094
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      # Single-broker cluster: internal topics must use RF=1, otherwise
+      # __consumer_offsets never gets created and ALL consumer groups stall.
+      - KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR=1
+      - KAFKA_TRANSACTION_STATE_LOG_MIN_ISR=1
+      - KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS=0
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      game_network:
+        aliases:
+          - kafka
+
+  core:
+    build:
+      context: ./main-server
+      dockerfile: Dockerfile
+    container_name: game-core-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${DB_NAME:-game_core}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      # JWT signing secret must be valid Base64 (the gateway Base64-decodes it).
+      APP_JWT_SECRET: ${APP_JWT_SECRET:-***REMOVED***}
+      JAVA_TOOL_OPTIONS: "-Xmx192m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+      APP_MEDIA_DIR: /app/media
+    ports:
+      - "8080:8080"
+    volumes:
+      - media_data:/app/media
+    networks:
+      - game_network
+
+  banking-service:
+    build:
+      context: ./main-server/banking-service
+      dockerfile: Dockerfile
+    container_name: banking-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8081
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${BANKING_DB_NAME:-banking_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: banking-group
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+    ports:
+      - "8081:8081"
+    networks:
+      - game_network
+
+  account-service:
+    build:
+      context: ./main-server/account-service
+      dockerfile: Dockerfile
+    container_name: account-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8082
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${ACCOUNTS_DB_NAME:-accounts_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: account-service
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+      BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-admin}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-admin12345}
+    ports:
+      - "8082:8082"
+    networks:
+      - game_network
+
+  access-service:
+    build:
+      context: ./main-server/access-service
+      dockerfile: Dockerfile
+    container_name: access-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8083
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${ACCESS_DB_NAME:-access_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: access-service
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+    ports:
+      - "8083:8083"
+    networks:
+      - game_network
+
+  audit-service:
+    build:
+      context: ./main-server/audit-service
+      dockerfile: Dockerfile
+    container_name: audit-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8084
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${AUDIT_DB_NAME:-audit_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: audit-service
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+      AUDIT_HACK_TOKEN: ${AUDIT_HACK_TOKEN:-}
+    ports:
+      - "8084:8084"
+    networks:
+      - game_network
+
+  card-service:
+    build:
+      context: ./main-server/card-service
+      dockerfile: Dockerfile
+    container_name: card-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8085
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${CARD_DB_NAME:-card_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: card-service
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+    ports:
+      - "8085:8085"
+    networks:
+      - game_network
+
+  terminal-service:
+    build:
+      context: ./main-server/terminal-service
+      dockerfile: Dockerfile
+    container_name: terminal-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8086
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${TERMINAL_DB_NAME:-terminal_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: terminal-service
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+    ports:
+      - "8086:8086"
+    networks:
+      - game_network
+
+  marketplace-service:
+    build:
+      context: ./main-server/marketplace-service
+      dockerfile: Dockerfile
+    container_name: marketplace-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8087
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${MARKETPLACE_DB_NAME:-marketplace_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: marketplace-service
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+    ports:
+      - "8087:8087"
+    networks:
+      - game_network
+
+  news-service:
+    build:
+      context: ./main-server/news-service
+      dockerfile: Dockerfile
+    container_name: news-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8088
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${NEWS_DB_NAME:-news_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: news-service
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+    ports:
+      - "8089:8088"
+    networks:
+      - game_network
+
+  analytics-service:
+    build:
+      context: ./main-server/analytics-service
+      dockerfile: Dockerfile
+    container_name: analytics-service-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    environment:
+      SERVER_PORT: 8091
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: ${ANALYTICS_DB_NAME:-analytics_db}
+      DB_USER: ${DB_USER:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: kafka:9094
+      KAFKA_GROUP_ID: analytics-service
+      JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
+      SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
+      SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
+      SERVER_TOMCAT_THREADS_MAX: "20"
+      SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
+      SPRING_JMX_ENABLED: "false"
+    ports:
+      - "8091:8091"
+    networks:
+      - game_network
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: game-frontend
+    restart: unless-stopped
+    depends_on:
+      - core
+    ports:
+      # Порт 80 → чистый адрес без порта: http://bank.lan
+      - "80:80"
+    networks:
+      - game_network
+
+  # Локальный DNS: раздаёт красивые имена bank.lan / game.lan -> IP ноута A.
+  # Чтобы заработало для всех устройств, в DHCP роутера укажи этот ноут (LAN_IP)
+  # как DNS-сервер. См. ИНСТРУКЦИЯ/09-КРАСИВЫЙ-АДРЕС-DNS.md.
+  dns:
+    image: 4km3/dnsmasq:latest
+    container_name: game-dns
+    restart: unless-stopped
+    command:
+      - --address=/bank.lan/${LAN_IP:-192.168.1.10}
+      - --address=/game.lan/${LAN_IP:-192.168.1.10}
+      - --no-resolv
+      - --log-facility=-
+    ports:
+      - "53:53/udp"
+      - "53:53/tcp"
+    networks:
+      - game_network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: game-core-kafka-ui
+    profiles: ["tools"]   # not started by default; `docker compose --profile tools up -d kafka-ui`
+    depends_on:
+      - kafka
+    ports:
+      - "8090:8080"
+    environment:
+      - KAFKA_CLUSTERS_0_NAME=game-core
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=kafka:9094
+    networks:
+      - game_network
+
+volumes:
+  postgres_data:
+  kafka_data:
+    driver: local
+  media_data:
+
+networks:
+  game_network:
+    driver: bridge

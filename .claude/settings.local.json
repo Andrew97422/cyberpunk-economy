@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker version *)",
+      "Bash(docker compose *)",
+      "Bash(grep -rn \"localhost\\\\|http://\\\\|return.*url\\\\|\\\\\"/media\\\\|/api/\\\\|MediaUrl\\\\|getUrl\\\\|\\\\.url\\(\" --include=*.java -l)"
+    ]
+  }
+}

@@ -1,0 +1,25 @@
+package ru.andrew.mainserver.gateway.banking;
+
+public enum BankingCommandType {
+    GET_MY_BALANCE,
+    GET_BALANCE_BY_ACCOUNT,
+    GET_MY_TRANSACTIONS,
+    GET_TRANSACTIONS_BY_ACCOUNT,
+    DEPOSIT,
+    WITHDRAW,
+    TRANSFER,
+    REVERSE,
+    PURCHASE_CHARGE,
+    MASS_OPERATION,
+    GET_CRYPTO_RATE,
+    BUY_CRYPTO,
+    SELL_CRYPTO,
+    SET_CRYPTO_MARKET,
+    CRYPTO_SHOCK,
+    GET_CREDIT_OVERVIEW,
+    SET_CREDIT_POLICY,
+    OPEN_DEPOSIT,
+    CLOSE_DEPOSIT,
+    TAKE_LOAN,
+    REPAY_LOAN
+}

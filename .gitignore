@@ -1,0 +1,17 @@
+# Зависимости и сборка (регенерируются Docker'ом)
+**/node_modules/
+**/target/
+**/dist/
+**/build/
+
+# Бандлы образов и бэкапы
+*.tar
+camp-backups/
+
+# Логи и временное
+*.log
+*.tmp
+
+# IDE
+.idea/
+.vscode/

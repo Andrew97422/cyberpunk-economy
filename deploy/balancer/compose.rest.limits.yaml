@@ -1,0 +1,22 @@
+# Лимиты памяти для группы REST. Накладывается поверх compose.rest.yaml.
+services:
+  card-service:
+    mem_limit: 512m
+  terminal-service:
+    mem_limit: 512m
+  marketplace-service:
+    mem_limit: 512m
+  news-service:
+    mem_limit: 512m
+  audit-service:
+    mem_limit: 512m
+  card-postgres:
+    mem_limit: 256m
+  terminal-postgres:
+    mem_limit: 256m
+  marketplace-postgres:
+    mem_limit: 256m
+  news-postgres:
+    mem_limit: 256m
+  audit-postgres:
+    mem_limit: 256m

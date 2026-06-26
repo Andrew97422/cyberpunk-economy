@@ -1,0 +1,119 @@
+server:
+  port: ${SERVER_PORT:8080}
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: main-server
+
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:game_core}
+    username: ${DB_USER:postgres}
+    password: ${DB_PASSWORD:postgres}
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+    show-sql: false
+
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+    validate-on-migrate: true
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:game-core-kafka:9092}
+    client-id: ${KAFKA_CLIENT_ID:game-core}
+    producer:
+      acks: all
+      retries: 10
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      properties:
+        enable.idempotence: true
+        max.in.flight.requests.per.connection: 5
+        delivery.timeout.ms: 30000
+        linger.ms: 5
+        request.timeout.ms: 15000
+        spring.json.add.type.headers: false
+    consumer:
+      group-id: ${KAFKA_GROUP_ID:game-core-group}
+      auto-offset-reset: earliest
+      enable-auto-commit: false
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "ru.andrew.core.event"
+        spring.json.use.type.headers: false
+    listener:
+      ack-mode: manual_immediate
+      concurrency: 1
+
+  docker:
+    compose:
+      enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always
+
+logging:
+  level:
+    root: INFO
+    org.springframework.security: INFO
+    org.hibernate.SQL: WARN
+    org.flywaydb: INFO
+    ru.andrew.core: DEBUG
+
+springdoc:
+  api-docs:
+    path: /docs/api
+  swagger-ui:
+    path: /docs/swagger
+    operationsSorter: alpha
+    tagsSorter: alpha
+
+app:
+  security:
+    jwt-secret: ${APP_JWT_SECRET:change-me-change-me-change-me-very-secret}
+    jwt-expiration-seconds: ${APP_JWT_EXPIRATION_SECONDS:3600}
+    pin-session-expiration-seconds: ${APP_PIN_SESSION_EXPIRATION_SECONDS:1800}
+    admin-session-expiration-seconds: ${APP_ADMIN_SESSION_EXPIRATION_SECONDS:43200}
+    public-paths:
+      - /auth/**
+      - /docs/**
+      - /actuator/health
+      - /error
+
+  kafka:
+    topics:
+      audit-events: ${KAFKA_TOPIC_AUDIT:audit.events}
+      domain-events: ${KAFKA_TOPIC_DOMAIN:domain.events}
+      security-events: ${KAFKA_TOPIC_SECURITY:security.events}
+
+  cors:
+    allowed-origins:
+      - ${APP_CORS_ALLOWED_ORIGIN:http://localhost:5173}
+    allowed-methods:
+      - GET
+      - POST
+      - PUT
+      - PATCH
+      - DELETE
+      - OPTIONS
+    allowed-headers:
+      - "*"

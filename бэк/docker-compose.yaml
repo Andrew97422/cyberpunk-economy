@@ -1,0 +1,75 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: game-core-postgres
+    environment:
+      POSTGRES_DB: ${DB_NAME:-game_core}
+      POSTGRES_USER: ${DB_USER:-game_user}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-game_password}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${DB_USER:-game_user} -d ${DB_NAME:-game_core}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  kafka:
+    image: apache/kafka:3.8.0
+    container_name: game-core-kafka
+    ports:
+      - "9092:9092" # Ваш ПК будет видеть Кафку на 9092 порту
+    environment:
+      - KAFKA_NODE_ID=1
+      - KAFKA_PROCESS_ROLES=broker,controller
+
+      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=EXTERNAL:PLAINTEXT,INTERNAL:PLAINTEXT,CONTROLLER:PLAINTEXT
+
+      # ИСПРАВЛЕНО: Теперь у каждого слушателя строго свой собственный порт внутри контейнера
+      - KAFKA_LISTENERS=EXTERNAL://0.0.0.0:9092,INTERNAL://0.0.0.0:9094,CONTROLLER://0.0.0.0:9093
+
+      # ИСПРАВЛЕНО: Названия полностью совпадают с KAFKA_LISTENERS
+      - KAFKA_ADVERTISED_LISTENERS=EXTERNAL://localhost:9092,INTERNAL://kafka:9094
+
+      - KAFKA_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CONTROLLER_QUORUM_VOTERS=1@localhost:9093
+      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
+      - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+    volumes:
+      - kafka_data:/var/lib/kafka/data
+    networks:
+      game_network:
+        aliases:
+          - kafka
+
+  core:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: game-core-app
+    depends_on:
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_started
+    env_file:
+      - .env
+    ports:
+      - "8080:8080"
+    networks:
+      - game_network
+
+volumes:
+  postgres_data:
+  kafka_data:
+    driver: local
+
+networks:
+  game_network:
+    driver: bridge

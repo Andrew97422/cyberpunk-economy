@@ -1,0 +1,239 @@
+# ── Machine 3 (REST domains) ──────────────────────────────────────────────
+# card + terminal + marketplace + news + audit services, each with its own postgres.
+# Connects to the Kafka broker on the CORE machine over the LAN.
+#
+# REQUIRED: set CORE_HOST in .env to the CORE machine's LAN IP (machine 1).
+#   docker compose -f compose.rest.yaml up -d
+
+services:
+  card-postgres:
+    image: postgres:16
+    container_name: card-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${CARD_DB_NAME:-card_db}
+      POSTGRES_USER: ${CARD_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${CARD_DB_PASSWORD:-postgres}
+    ports:
+      - "5437:5432"
+    volumes:
+      - card_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${CARD_DB_USER:-postgres} -d ${CARD_DB_NAME:-card_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  card-service:
+    build:
+      context: ./main-server/card-service
+      dockerfile: Dockerfile
+    container_name: card-service-app
+    restart: unless-stopped
+    depends_on:
+      card-postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8085
+      DB_HOST: card-postgres
+      DB_PORT: 5432
+      DB_NAME: ${CARD_DB_NAME:-card_db}
+      DB_USER: ${CARD_DB_USER:-postgres}
+      DB_PASSWORD: ${CARD_DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
+      KAFKA_GROUP_ID: card-service
+      JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
+    ports:
+      - "8085:8085"
+    networks:
+      - game_network
+
+  terminal-postgres:
+    image: postgres:16
+    container_name: terminal-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${TERMINAL_DB_NAME:-terminal_db}
+      POSTGRES_USER: ${TERMINAL_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${TERMINAL_DB_PASSWORD:-postgres}
+    ports:
+      - "5438:5432"
+    volumes:
+      - terminal_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${TERMINAL_DB_USER:-postgres} -d ${TERMINAL_DB_NAME:-terminal_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  terminal-service:
+    build:
+      context: ./main-server/terminal-service
+      dockerfile: Dockerfile
+    container_name: terminal-service-app
+    restart: unless-stopped
+    depends_on:
+      terminal-postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8086
+      DB_HOST: terminal-postgres
+      DB_PORT: 5432
+      DB_NAME: ${TERMINAL_DB_NAME:-terminal_db}
+      DB_USER: ${TERMINAL_DB_USER:-postgres}
+      DB_PASSWORD: ${TERMINAL_DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
+      KAFKA_GROUP_ID: terminal-service
+      JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
+    ports:
+      - "8086:8086"
+    networks:
+      - game_network
+
+  marketplace-postgres:
+    image: postgres:16
+    container_name: marketplace-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${MARKETPLACE_DB_NAME:-marketplace_db}
+      POSTGRES_USER: ${MARKETPLACE_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${MARKETPLACE_DB_PASSWORD:-postgres}
+    ports:
+      - "5439:5432"
+    volumes:
+      - marketplace_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${MARKETPLACE_DB_USER:-postgres} -d ${MARKETPLACE_DB_NAME:-marketplace_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  marketplace-service:
+    build:
+      context: ./main-server/marketplace-service
+      dockerfile: Dockerfile
+    container_name: marketplace-service-app
+    restart: unless-stopped
+    depends_on:
+      marketplace-postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8087
+      DB_HOST: marketplace-postgres
+      DB_PORT: 5432
+      DB_NAME: ${MARKETPLACE_DB_NAME:-marketplace_db}
+      DB_USER: ${MARKETPLACE_DB_USER:-postgres}
+      DB_PASSWORD: ${MARKETPLACE_DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
+      KAFKA_GROUP_ID: marketplace-service
+      JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
+    ports:
+      - "8087:8087"
+    networks:
+      - game_network
+
+  news-postgres:
+    image: postgres:16
+    container_name: news-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${NEWS_DB_NAME:-news_db}
+      POSTGRES_USER: ${NEWS_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${NEWS_DB_PASSWORD:-postgres}
+    ports:
+      - "5440:5432"
+    volumes:
+      - news_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${NEWS_DB_USER:-postgres} -d ${NEWS_DB_NAME:-news_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  news-service:
+    build:
+      context: ./main-server/news-service
+      dockerfile: Dockerfile
+    container_name: news-service-app
+    restart: unless-stopped
+    depends_on:
+      news-postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8088
+      DB_HOST: news-postgres
+      DB_PORT: 5432
+      DB_NAME: ${NEWS_DB_NAME:-news_db}
+      DB_USER: ${NEWS_DB_USER:-postgres}
+      DB_PASSWORD: ${NEWS_DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
+      KAFKA_GROUP_ID: news-service
+      JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
+    ports:
+      - "8089:8088"
+    networks:
+      - game_network
+
+  audit-postgres:
+    image: postgres:16
+    container_name: audit-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${AUDIT_DB_NAME:-audit_db}
+      POSTGRES_USER: ${AUDIT_DB_USER:-postgres}
+      POSTGRES_PASSWORD: ${AUDIT_DB_PASSWORD:-postgres}
+    ports:
+      - "5436:5432"
+    volumes:
+      - audit_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${AUDIT_DB_USER:-postgres} -d ${AUDIT_DB_NAME:-audit_db}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - game_network
+
+  audit-service:
+    build:
+      context: ./main-server/audit-service
+      dockerfile: Dockerfile
+    container_name: audit-service-app
+    restart: unless-stopped
+    depends_on:
+      audit-postgres:
+        condition: service_healthy
+    environment:
+      SERVER_PORT: 8084
+      DB_HOST: audit-postgres
+      DB_PORT: 5432
+      DB_NAME: ${AUDIT_DB_NAME:-audit_db}
+      DB_USER: ${AUDIT_DB_USER:-postgres}
+      DB_PASSWORD: ${AUDIT_DB_PASSWORD:-postgres}
+      KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
+      KAFKA_GROUP_ID: audit-service
+      JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
+      AUDIT_HACK_TOKEN: ${AUDIT_HACK_TOKEN:-}
+    ports:
+      - "8084:8084"
+    networks:
+      - game_network
+
+volumes:
+  card_postgres_data:
+  terminal_postgres_data:
+  marketplace_postgres_data:
+  news_postgres_data:
+  audit_postgres_data:
+
+networks:
+  game_network:
+    driver: bridge

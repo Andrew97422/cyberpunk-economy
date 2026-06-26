@@ -1,0 +1,24 @@
+{
+  "_comment": "Манифест для балансировщика. weightMB = сумма mem_limit всех контейнеров группы (см. *.limits.yaml). Балансировщик раскладывает группы по нодам так, чтобы минимизировать пиковую загрузку памяти. Группа core закреплена за входной нодой (там Kafka + шлюз + фронтенд).",
+  "safetyFactor": 0.75,
+  "groups": [
+    {
+      "name": "core",
+      "pinToEntry": true,
+      "weightMB": 2048,
+      "compose": ["compose.core.yaml", "deploy/balancer/compose.core.limits.yaml"]
+    },
+    {
+      "name": "finance",
+      "pinToEntry": false,
+      "weightMB": 2304,
+      "compose": ["compose.finance.yaml", "deploy/balancer/compose.finance.limits.yaml"]
+    },
+    {
+      "name": "rest",
+      "pinToEntry": false,
+      "weightMB": 3840,
+      "compose": ["compose.rest.yaml", "deploy/balancer/compose.rest.limits.yaml"]
+    }
+  ]
+}
