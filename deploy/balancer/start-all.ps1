@@ -68,11 +68,22 @@ Write-Host "`n=== Контейнеры ===" -ForegroundColor Yellow
 docker compose -p $Project ps
 
 Write-Host "`n[i] Сервисам нужно ~30-60 сек на прогрев. Проверка логина:" -ForegroundColor DarkGray
+# Креды админа берём из .env (НЕ хардкодим).
+$envFile = Join-Path $PSScriptRoot "..\..\.env"
+$admName = "admin"
+$admPass = $env:BOOTSTRAP_ADMIN_PASSWORD
+if (-not $admPass -and (Test-Path $envFile)) {
+  Get-Content $envFile | ForEach-Object {
+    if ($_ -match '^\s*BOOTSTRAP_ADMIN_NAME\s*=\s*(.+?)\s*$')     { $admName = $Matches[1] }
+    if ($_ -match '^\s*BOOTSTRAP_ADMIN_PASSWORD\s*=\s*(.+?)\s*$') { $admPass = $Matches[1] }
+  }
+}
 $ok = $false
 for ($i = 0; $i -lt 12; $i++) {
   Start-Sleep -Seconds 5
   try {
-    $body = '{"publicName":"admin","password":"admin12345"}'
+    if (-not $admPass) { break }
+    $body = @{ publicName = $admName; password = $admPass } | ConvertTo-Json -Compress
     Invoke-RestMethod -Uri "http://localhost:8080/api/auth/admin/login" -Method Post `
       -ContentType "application/json" -Body $body -TimeoutSec 5 | Out-Null
     $ok = $true; break
@@ -83,4 +94,4 @@ else { Write-Host "Шлюз ещё прогревается — подожди �
 
 Write-Host "`nГотово. Открывай:  http://localhost  (с других устройств — http://bank.lan или http://<IP этого ноута>)" -ForegroundColor Green
 Write-Host "Имя bank.lan заработает после настройки DNS на роутере — см. ИНСТРУКЦИЯ/09-КРАСИВЫЙ-АДРЕС-DNS.md" -ForegroundColor DarkGray
-Write-Host "Логин админа: admin / admin12345" -ForegroundColor Green
+Write-Host ("Логин админа: {0} / <пароль из .env (BOOTSTRAP_ADMIN_PASSWORD)>" -f $admName) -ForegroundColor Green

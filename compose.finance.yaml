@@ -13,7 +13,7 @@ services:
     environment:
       POSTGRES_DB: ${BANKING_DB_NAME:-banking_db}
       POSTGRES_USER: ${BANKING_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${BANKING_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${BANKING_DB_PASSWORD:?set this in .env}
     ports:
       - "5433:5432"
     volumes:
@@ -41,7 +41,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${BANKING_DB_NAME:-banking_db}
       DB_USER: ${BANKING_DB_USER:-postgres}
-      DB_PASSWORD: ${BANKING_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${BANKING_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
       KAFKA_GROUP_ID: banking-group
       JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
@@ -57,7 +57,7 @@ services:
     environment:
       POSTGRES_DB: ${ACCOUNTS_DB_NAME:-accounts_db}
       POSTGRES_USER: ${ACCOUNTS_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${ACCOUNTS_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${ACCOUNTS_DB_PASSWORD:?set this in .env}
     ports:
       - "5434:5432"
     volumes:
@@ -85,12 +85,12 @@ services:
       DB_PORT: 5432
       DB_NAME: ${ACCOUNTS_DB_NAME:-accounts_db}
       DB_USER: ${ACCOUNTS_DB_USER:-postgres}
-      DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
       KAFKA_GROUP_ID: account-service
       JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
       BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-admin}
-      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-admin12345}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?set this in .env}
     ports:
       - "8082:8082"
     networks:
@@ -103,7 +103,7 @@ services:
     environment:
       POSTGRES_DB: ${ACCESS_DB_NAME:-access_db}
       POSTGRES_USER: ${ACCESS_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${ACCESS_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${ACCESS_DB_PASSWORD:?set this in .env}
     ports:
       - "5435:5432"
     volumes:
@@ -131,7 +131,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${ACCESS_DB_NAME:-access_db}
       DB_USER: ${ACCESS_DB_USER:-postgres}
-      DB_PASSWORD: ${ACCESS_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${ACCESS_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
       KAFKA_GROUP_ID: access-service
       JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"

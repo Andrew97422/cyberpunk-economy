@@ -13,7 +13,7 @@ services:
     environment:
       POSTGRES_DB: ${CARD_DB_NAME:-card_db}
       POSTGRES_USER: ${CARD_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${CARD_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${CARD_DB_PASSWORD:?set this in .env}
     ports:
       - "5437:5432"
     volumes:
@@ -41,7 +41,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${CARD_DB_NAME:-card_db}
       DB_USER: ${CARD_DB_USER:-postgres}
-      DB_PASSWORD: ${CARD_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${CARD_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
       KAFKA_GROUP_ID: card-service
       JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
@@ -57,7 +57,7 @@ services:
     environment:
       POSTGRES_DB: ${TERMINAL_DB_NAME:-terminal_db}
       POSTGRES_USER: ${TERMINAL_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${TERMINAL_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${TERMINAL_DB_PASSWORD:?set this in .env}
     ports:
       - "5438:5432"
     volumes:
@@ -85,7 +85,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${TERMINAL_DB_NAME:-terminal_db}
       DB_USER: ${TERMINAL_DB_USER:-postgres}
-      DB_PASSWORD: ${TERMINAL_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${TERMINAL_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
       KAFKA_GROUP_ID: terminal-service
       JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
@@ -101,7 +101,7 @@ services:
     environment:
       POSTGRES_DB: ${MARKETPLACE_DB_NAME:-marketplace_db}
       POSTGRES_USER: ${MARKETPLACE_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${MARKETPLACE_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${MARKETPLACE_DB_PASSWORD:?set this in .env}
     ports:
       - "5439:5432"
     volumes:
@@ -129,7 +129,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${MARKETPLACE_DB_NAME:-marketplace_db}
       DB_USER: ${MARKETPLACE_DB_USER:-postgres}
-      DB_PASSWORD: ${MARKETPLACE_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${MARKETPLACE_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
       KAFKA_GROUP_ID: marketplace-service
       JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
@@ -145,7 +145,7 @@ services:
     environment:
       POSTGRES_DB: ${NEWS_DB_NAME:-news_db}
       POSTGRES_USER: ${NEWS_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${NEWS_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${NEWS_DB_PASSWORD:?set this in .env}
     ports:
       - "5440:5432"
     volumes:
@@ -173,7 +173,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${NEWS_DB_NAME:-news_db}
       DB_USER: ${NEWS_DB_USER:-postgres}
-      DB_PASSWORD: ${NEWS_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${NEWS_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
       KAFKA_GROUP_ID: news-service
       JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"
@@ -189,7 +189,7 @@ services:
     environment:
       POSTGRES_DB: ${AUDIT_DB_NAME:-audit_db}
       POSTGRES_USER: ${AUDIT_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${AUDIT_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${AUDIT_DB_PASSWORD:?set this in .env}
     ports:
       - "5436:5432"
     volumes:
@@ -217,7 +217,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${AUDIT_DB_NAME:-audit_db}
       DB_USER: ${AUDIT_DB_USER:-postgres}
-      DB_PASSWORD: ${AUDIT_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${AUDIT_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: ${CORE_HOST}:9092
       KAFKA_GROUP_ID: audit-service
       JAVA_TOOL_OPTIONS: "-Xmx160m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC"

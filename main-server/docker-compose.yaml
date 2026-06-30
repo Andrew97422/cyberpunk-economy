@@ -7,7 +7,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-game_core}
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set this in .env}
     ports:
       - "5432:5432"
     volumes:
@@ -26,7 +26,7 @@ services:
     environment:
       POSTGRES_DB: ${BANKING_DB_NAME:-banking_db}
       POSTGRES_USER: ${BANKING_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${BANKING_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${BANKING_DB_PASSWORD:?set this in .env}
     ports:
       - "5433:5432"
     volumes:
@@ -45,7 +45,7 @@ services:
     environment:
       POSTGRES_DB: ${ACCOUNTS_DB_NAME:-accounts_db}
       POSTGRES_USER: ${ACCOUNTS_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${ACCOUNTS_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${ACCOUNTS_DB_PASSWORD:?set this in .env}
     ports:
       - "5434:5432"
     volumes:
@@ -64,7 +64,7 @@ services:
     environment:
       POSTGRES_DB: ${ACCESS_DB_NAME:-access_db}
       POSTGRES_USER: ${ACCESS_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${ACCESS_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${ACCESS_DB_PASSWORD:?set this in .env}
     ports:
       - "5435:5432"
     volumes:
@@ -83,7 +83,7 @@ services:
     environment:
       POSTGRES_DB: ${CARD_DB_NAME:-card_db}
       POSTGRES_USER: ${CARD_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${CARD_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${CARD_DB_PASSWORD:?set this in .env}
     ports:
       - "5437:5432"
     volumes:
@@ -102,7 +102,7 @@ services:
     environment:
       POSTGRES_DB: ${TERMINAL_DB_NAME:-terminal_db}
       POSTGRES_USER: ${TERMINAL_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${TERMINAL_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${TERMINAL_DB_PASSWORD:?set this in .env}
     ports:
       - "5438:5432"
     volumes:
@@ -121,7 +121,7 @@ services:
     environment:
       POSTGRES_DB: ${AUDIT_DB_NAME:-audit_db}
       POSTGRES_USER: ${AUDIT_DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${AUDIT_DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${AUDIT_DB_PASSWORD:?set this in .env}
     ports:
       - "5436:5432"
     volumes:
@@ -171,7 +171,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-game_core}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
     ports:
       - "8080:8080"
@@ -194,7 +194,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${BANKING_DB_NAME:-banking_db}
       DB_USER: ${BANKING_DB_USER:-postgres}
-      DB_PASSWORD: ${BANKING_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${BANKING_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: banking-group
     ports:
@@ -218,11 +218,11 @@ services:
       DB_PORT: 5432
       DB_NAME: ${ACCOUNTS_DB_NAME:-accounts_db}
       DB_USER: ${ACCOUNTS_DB_USER:-postgres}
-      DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${ACCOUNTS_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: account-service
       BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-admin}
-      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-admin12345}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?set this in .env}
     ports:
       - "8082:8082"
     networks:
@@ -244,7 +244,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${ACCESS_DB_NAME:-access_db}
       DB_USER: ${ACCESS_DB_USER:-postgres}
-      DB_PASSWORD: ${ACCESS_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${ACCESS_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: access-service
     ports:
@@ -268,7 +268,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${AUDIT_DB_NAME:-audit_db}
       DB_USER: ${AUDIT_DB_USER:-postgres}
-      DB_PASSWORD: ${AUDIT_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${AUDIT_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: audit-service
       AUDIT_HACK_TOKEN: ${AUDIT_HACK_TOKEN:-}
@@ -293,7 +293,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${CARD_DB_NAME:-card_db}
       DB_USER: ${CARD_DB_USER:-postgres}
-      DB_PASSWORD: ${CARD_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${CARD_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: card-service
     ports:
@@ -317,7 +317,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${TERMINAL_DB_NAME:-terminal_db}
       DB_USER: ${TERMINAL_DB_USER:-postgres}
-      DB_PASSWORD: ${TERMINAL_DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${TERMINAL_DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: terminal-service
     ports:

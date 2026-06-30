@@ -15,8 +15,19 @@ Write-Host "=== Контейнеры (этот ноут) ===" -ForegroundColor Y
 docker compose -p game-camp ps
 
 Write-Host "`n=== Шлюз + Kafka (сквозная проверка) ===" -ForegroundColor Yellow
+# Креды админа берём из .env (НЕ хардкодим).
+$envFile = Join-Path $PSScriptRoot "..\..\.env"
+$admName = "admin"
+$admPass = $env:BOOTSTRAP_ADMIN_PASSWORD
+if (-not $admPass -and (Test-Path $envFile)) {
+  Get-Content $envFile | ForEach-Object {
+    if ($_ -match '^\s*BOOTSTRAP_ADMIN_NAME\s*=\s*(.+?)\s*$')     { $admName = $Matches[1] }
+    if ($_ -match '^\s*BOOTSTRAP_ADMIN_PASSWORD\s*=\s*(.+?)\s*$') { $admPass = $Matches[1] }
+  }
+}
 try {
-  $body = '{"publicName":"admin","password":"admin12345"}'
+  if (-not $admPass) { throw "BOOTSTRAP_ADMIN_PASSWORD не задан (env или .env)" }
+  $body = @{ publicName = $admName; password = $admPass } | ConvertTo-Json -Compress
   $r = Invoke-RestMethod -Uri ("http://{0}:8080/api/auth/admin/login" -f $EntryIp) `
     -Method Post -ContentType "application/json" -Body $body -TimeoutSec 5
   Write-Host "OK: шлюз ответил, токен получен (значит, связка через Kafka жива)." -ForegroundColor Green

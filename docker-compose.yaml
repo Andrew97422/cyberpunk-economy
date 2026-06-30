@@ -12,7 +12,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-game_core}
       POSTGRES_USER: ${DB_USER:-postgres}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?set this in .env}
     ports:
       - "5432:5432"
     volumes:
@@ -73,10 +73,10 @@ services:
       DB_PORT: 5432
       DB_NAME: ${DB_NAME:-game_core}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       # JWT signing secret must be valid Base64 (the gateway Base64-decodes it).
-      APP_JWT_SECRET: ${APP_JWT_SECRET:-***REMOVED***}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:?set this in .env}
       JAVA_TOOL_OPTIONS: "-Xmx192m -XX:MaxMetaspaceSize=128m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
       SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE: "4"
       SPRING_DATASOURCE_HIKARI_MINIMUM_IDLE: "1"
@@ -108,7 +108,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${BANKING_DB_NAME:-banking_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: banking-group
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
@@ -139,7 +139,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${ACCOUNTS_DB_NAME:-accounts_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: account-service
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
@@ -149,7 +149,7 @@ services:
       SERVER_TOMCAT_THREADS_MIN_SPARE: "2"
       SPRING_JMX_ENABLED: "false"
       BOOTSTRAP_ADMIN_NAME: ${BOOTSTRAP_ADMIN_NAME:-admin}
-      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:-admin12345}
+      BOOTSTRAP_ADMIN_PASSWORD: ${BOOTSTRAP_ADMIN_PASSWORD:?set this in .env}
     ports:
       - "8082:8082"
     networks:
@@ -172,7 +172,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${ACCESS_DB_NAME:-access_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: access-service
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
@@ -203,7 +203,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${AUDIT_DB_NAME:-audit_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: audit-service
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
@@ -235,7 +235,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${CARD_DB_NAME:-card_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: card-service
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
@@ -266,7 +266,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${TERMINAL_DB_NAME:-terminal_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: terminal-service
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
@@ -297,7 +297,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${MARKETPLACE_DB_NAME:-marketplace_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: marketplace-service
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
@@ -328,7 +328,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${NEWS_DB_NAME:-news_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: news-service
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"
@@ -359,7 +359,7 @@ services:
       DB_PORT: 5432
       DB_NAME: ${ANALYTICS_DB_NAME:-analytics_db}
       DB_USER: ${DB_USER:-postgres}
-      DB_PASSWORD: ${DB_PASSWORD:-postgres}
+      DB_PASSWORD: ${DB_PASSWORD:?set this in .env}
       KAFKA_BOOTSTRAP_SERVERS: kafka:9094
       KAFKA_GROUP_ID: analytics-service
       JAVA_TOOL_OPTIONS: "-Xmx128m -XX:MaxMetaspaceSize=96m -XX:+UseSerialGC -Xss512k -XX:TieredStopAtLevel=1"

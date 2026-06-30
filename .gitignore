@@ -20,3 +20,9 @@ analytics-export.zip
 # IDE
 .idea/
 .vscode/
+
+# Секреты: .env с реальными значениями НЕ коммитим, примеры (*.example) — можно.
+.env
+**/.env
+!**/*.env.example
+!.env.multi.example
