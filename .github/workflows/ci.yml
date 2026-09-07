@@ -49,7 +49,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jar-${{ matrix.module == '.' && 'game-core' || matrix.module }}
-          path: main-server/${{ matrix.module }}/target/*.jar
+          # upload-artifact rejects './' inside a pattern, so the gateway (module '.')
+          # needs the bare directory rather than the interpolated module path.
+          path: main-server/${{ matrix.module == '.' && 'target' || format('{0}/target', matrix.module) }}/*.jar
           retention-days: 7
           if-no-files-found: error
 
