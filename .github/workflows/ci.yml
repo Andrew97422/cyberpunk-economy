@@ -30,10 +30,10 @@ jobs:
           - news-service
           - terminal-service
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           java-version: '17'
           distribution: temurin
@@ -57,10 +57,10 @@ jobs:
     name: build · frontend
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Set up Node 20
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v5
         with:
           node-version: '20'
           cache: npm
@@ -107,7 +107,7 @@ jobs:
       NEWS_DB_PASSWORD: ci-only
       TERMINAL_DB_PASSWORD: ci-only
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
       - name: Every topology parses
         run: |
