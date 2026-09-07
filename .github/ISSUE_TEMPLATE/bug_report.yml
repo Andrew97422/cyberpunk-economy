@@ -1,0 +1,62 @@
+name: Bug report
+description: Something behaves incorrectly
+labels: [bug]
+body:
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - game-core (gateway)
+        - banking-service
+        - account-service
+        - access-service
+        - card-service
+        - terminal-service
+        - marketplace-service
+        - news-service
+        - audit-service
+        - analytics-service
+        - frontend
+        - deployment / compose / ops
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the HTTP status and response body if the failure came through the gateway.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. docker compose up -d --build
+        2. POST /api/banking/transfer with ...
+        3. ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: "`docker compose logs <service> --tail 100`. Redact any real secret before pasting."
+      render: shell
+
+  - type: input
+    id: topology
+    attributes:
+      label: Topology
+      placeholder: single-host docker-compose.yaml / 3-machine split

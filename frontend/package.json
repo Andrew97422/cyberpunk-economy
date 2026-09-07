@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "lint": "tsc -b --noEmit"
+    "typecheck": "tsc -b"
   },
   "dependencies": {
     "axios": "^1.7.9",

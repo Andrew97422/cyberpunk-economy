@@ -1,0 +1,129 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: build · ${{ matrix.module }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        module:
+          - .                     # game-core — API gateway
+          - access-service
+          - account-service
+          - analytics-service
+          - audit-service
+          - banking-service
+          - card-service
+          - marketplace-service
+          - news-service
+          - terminal-service
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: temurin
+          cache: maven
+
+      # Each service is an independent Maven project (no aggregator pom), so the
+      # matrix builds them in parallel and a break is attributed to one service.
+      - name: Build ${{ matrix.module }}
+        working-directory: main-server
+        run: ./mvnw -B -ntp -DskipTests -f ${{ matrix.module }}/pom.xml package
+
+      - name: Upload jar
+        uses: actions/upload-artifact@v4
+        with:
+          name: jar-${{ matrix.module == '.' && 'game-core' || matrix.module }}
+          path: main-server/${{ matrix.module }}/target/*.jar
+          retention-days: 7
+          if-no-files-found: error
+
+  frontend:
+    name: build · frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install
+        working-directory: frontend
+        run: npm ci --no-audit --no-fund
+
+      - name: Type-check
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Build
+        working-directory: frontend
+        run: npm run build
+
+      - name: Upload bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist
+          retention-days: 7
+          if-no-files-found: error
+
+  compose:
+    name: validate · compose topologies
+    runs-on: ubuntu-latest
+    env:
+      # Throwaway values. The point of this job is that every topology parses and
+      # that no secret has a weak fallback — the files declare them as ${VAR:?}
+      # and would fail here if that guarantee regressed.
+      CORE_HOST: 127.0.0.1
+      LAN_IP: 127.0.0.1
+      APP_JWT_SECRET: Y2ktb25seS1ub3QtYS1yZWFsLXNlY3JldC1jaS1vbmx5LW5vdC1yZWFs
+      DB_PASSWORD: ci-only
+      BOOTSTRAP_ADMIN_PASSWORD: ci-only
+      ACCESS_DB_PASSWORD: ci-only
+      ACCOUNTS_DB_PASSWORD: ci-only
+      AUDIT_DB_PASSWORD: ci-only
+      BANKING_DB_PASSWORD: ci-only
+      CARD_DB_PASSWORD: ci-only
+      MARKETPLACE_DB_PASSWORD: ci-only
+      NEWS_DB_PASSWORD: ci-only
+      TERMINAL_DB_PASSWORD: ci-only
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Every topology parses
+        run: |
+          for f in docker-compose.yaml compose.core.yaml compose.finance.yaml compose.rest.yaml; do
+            echo "::group::$f"
+            docker compose -f "$f" config --quiet
+            echo "OK $f"
+            echo "::endgroup::"
+          done
+
+      - name: Secrets fail closed when unset
+        run: |
+          for v in APP_JWT_SECRET DB_PASSWORD BOOTSTRAP_ADMIN_PASSWORD; do
+            if env -u "$v" docker compose -f docker-compose.yaml config --quiet 2>/dev/null; then
+              echo "::error::docker-compose.yaml still starts with $v unset — it must fail closed"
+              exit 1
+            fi
+            echo "OK: unset $v is rejected"
+          done

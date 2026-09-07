@@ -1,0 +1,61 @@
+name: E2E
+
+# Heavy: builds all 15 containers and runs the 139-assertion integration suite
+# against a live stack (~10-15 min). Kept on-demand so the CI badge stays a
+# signal about the fast checks; run it before a release or after touching the
+# gateway, banking or the Kafka contracts.
+on:
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: full stack · e2e scenarios
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generate throwaway secrets
+        run: |
+          {
+            echo "CORE_HOST=host.docker.internal"
+            echo "LAN_IP=127.0.0.1"
+            echo "APP_JWT_SECRET=$(openssl rand -base64 48)"
+            echo "DB_PASSWORD=$(openssl rand -hex 24)"
+            echo "BOOTSTRAP_ADMIN_NAME=admin"
+            echo "BOOTSTRAP_ADMIN_PASSWORD=$(openssl rand -hex 12)"
+            echo "AUDIT_HACK_TOKEN="
+          } > .env
+          echo "ADMIN_PASSWORD=$(grep BOOTSTRAP_ADMIN_PASSWORD .env | cut -d= -f2)" >> "$GITHUB_ENV"
+
+      - name: Bring the stack up
+        run: docker compose up -d --build --wait --wait-timeout 900
+
+      - name: Wait for the gateway
+        run: |
+          for i in $(seq 1 60); do
+            if curl -fsS http://localhost:8080/api/actuator/health | grep -q '"status":"UP"'; then
+              echo "gateway is up after ${i}0s"; exit 0
+            fi
+            sleep 10
+          done
+          echo "::error::gateway did not become healthy"; exit 1
+
+      - name: Run scenarios
+        env:
+          BASE: http://localhost:8080/api
+          ADMIN_NAME: admin
+        run: node e2e/run-scenarios.mjs
+
+      - name: Container logs on failure
+        if: failure()
+        run: docker compose logs --tail 200
+
+      - name: Tear down
+        if: always()
+        run: docker compose down -v

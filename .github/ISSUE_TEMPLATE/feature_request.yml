@@ -1,0 +1,33 @@
+name: Feature request
+description: Propose a change to the platform
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What is hard or impossible today? Describe the situation, not the solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: impact
+    attributes:
+      label: Does this touch any of these?
+      options:
+        - label: A Kafka contract (new command/event, or a change to an existing payload)
+        - label: A database schema (needs a new Flyway migration)
+        - label: The gateway's public REST API
+        - label: Deployment topology or operator runbooks
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
