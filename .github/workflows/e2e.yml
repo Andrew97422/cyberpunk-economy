@@ -33,8 +33,11 @@ jobs:
           } > .env
           # e2e/config.mjs reads this same .env, so nothing else has to be exported.
 
+      # dns is scaled to zero: dnsmasq binds :53 to serve bank.lan/game.lan on the
+      # venue LAN, and the runner's systemd-resolved already holds that port.
+      # Nothing depends_on it, and the suite addresses the gateway directly.
       - name: Bring the stack up
-        run: docker compose up -d --build --wait --wait-timeout 900
+        run: docker compose up -d --build --wait --wait-timeout 900 --scale dns=0
 
       - name: Wait for the gateway
         run: |
