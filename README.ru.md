@@ -3,6 +3,7 @@
 **Событийный бэкенд из десяти сервисов на Spring Boot, на котором прошла живая экономическая игра для ~70 участников: Kafka request/reply за API-шлюзом, БД-на-сервис, транзакционный outbox, идемпотентные денежные операции. Полностью офлайн, на обычных ноутбуках.**
 
 [![CI](https://github.com/Andrew97422/cyberpunk-economy/actions/workflows/ci.yml/badge.svg)](https://github.com/Andrew97422/cyberpunk-economy/actions/workflows/ci.yml)
+[![E2E](https://github.com/Andrew97422/cyberpunk-economy/actions/workflows/e2e.yml/badge.svg)](https://github.com/Andrew97422/cyberpunk-economy/actions/workflows/e2e.yml)
 [![Java](https://img.shields.io/badge/Java-17-007396?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/17/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Apache Kafka](https://img.shields.io/badge/Kafka-KRaft-231F20?logo=apachekafka&logoColor=white)](https://kafka.apache.org/)
@@ -37,7 +38,7 @@
 | **Обмен сообщениями** | Apache Kafka (KRaft) · 26 топиков (9 пар команда/ответ + 8 потоков событий) · 78 типизированных команд |
 | **Хранение** | 10 баз · 49 JPA-сущностей · 36 таблиц · 28 миграций Flyway · схема как код |
 | **Консистентность** | Транзакционный outbox · ключи идемпотентности · упорядоченные пессимистичные блокировки · CQRS read-модель |
-| **Интеграционные тесты** | 139 проверок против живого стека, без тестовых зависимостей |
+| **Интеграционные тесты** | 138 проверок против живого стека, без тестовых зависимостей |
 | **Развёртывание** | 3 топологии Compose (один хост / сплит на 3 машины) · 15 контейнеров |
 | **Фронтенд** | SPA на React 18 + TypeScript, 35 страниц (тонкий клиент над шлюзом) |
 
@@ -345,7 +346,7 @@ node e2e/seed.mjs            # опционально: демо-аккаунты
 `BASE`, `ADMIN_NAME` и `ADMIN_PASSWORD` переопределяют их, если целишься в другой хост. Код
 возврата `0` при чистом прогоне, `1` если хоть один сценарий упал.
 
-**139 проверок в 14 группах** через настоящий шлюз — health, авторизация (админ, игрок, логаут),
+**138 проверок в 14 группах** через настоящий шлюз — health, авторизация (админ, игрок, логаут),
 аккаунты, PIN-коды, сессии, банкинг в контексте админа и игрока, самообслуживание игрока, карты,
 терминалы, магазин, новости и аудит. В том числе асинхронное распространение account→banking,
 которое раннер повторяет, пока не приедет снапшот через Kafka, а не спит фиксированное время.

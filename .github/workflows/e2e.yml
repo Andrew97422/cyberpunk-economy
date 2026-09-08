@@ -1,6 +1,6 @@
 name: E2E
 
-# Heavy: builds all 15 containers and runs the 139-assertion integration suite
+# Heavy: builds all 15 containers and runs the 138-assertion integration suite
 # against a live stack (~10-15 min). Kept on-demand so the CI badge stays a
 # signal about the fast checks; run it before a release or after touching the
 # gateway, banking or the Kafka contracts.

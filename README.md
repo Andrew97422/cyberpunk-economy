@@ -3,6 +3,7 @@
 **A ten-service, event-driven Spring Boot backend that ran a live economy game for ~70 players — Kafka request/reply behind an API gateway, database-per-service, transactional outbox, idempotent money operations. Fully offline, on consumer laptops.**
 
 [![CI](https://github.com/Andrew97422/cyberpunk-economy/actions/workflows/ci.yml/badge.svg)](https://github.com/Andrew97422/cyberpunk-economy/actions/workflows/ci.yml)
+[![E2E](https://github.com/Andrew97422/cyberpunk-economy/actions/workflows/e2e.yml/badge.svg)](https://github.com/Andrew97422/cyberpunk-economy/actions/workflows/e2e.yml)
 [![Java](https://img.shields.io/badge/Java-17-007396?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/17/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.5-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Apache Kafka](https://img.shields.io/badge/Kafka-KRaft-231F20?logo=apachekafka&logoColor=white)](https://kafka.apache.org/)
@@ -38,7 +39,7 @@ It ran. ~70 participants played it end to end across two days.
 | **Messaging** | Apache Kafka (KRaft) · 26 topics (9 command/reply pairs + 8 event streams) · 78 typed commands |
 | **Persistence** | 10 databases · 49 JPA entities · 36 tables · 28 Flyway migrations · schema-as-code |
 | **Consistency** | Transactional outbox · idempotency keys · ordered pessimistic locks · CQRS read model |
-| **Integration tests** | 139 assertions against a live stack, zero test dependencies |
+| **Integration tests** | 138 assertions against a live stack, zero test dependencies |
 | **Deployment** | 3 Compose topologies (single host / 3-machine split) · 15 containers |
 | **Frontend** | React 18 + TypeScript SPA, 35 pages (thin client over the gateway) |
 
@@ -343,7 +344,7 @@ Credentials come from the same `.env` the stack was started with, so there is no
 `BASE`, `ADMIN_NAME` and `ADMIN_PASSWORD` override it when pointing at another host. Exit code is
 `0` on a clean run, `1` if any scenario failed.
 
-**139 assertions across 14 groups** driven through the real gateway — health, auth (admin, player
+**138 assertions across 14 groups** driven through the real gateway — health, auth (admin, player
 and logout), accounts, PINs, sessions, banking in both admin and player context, player
 self-service, cards, terminals, marketplace, news and audit. That includes the asynchronous
 account→banking propagation, which the runner retries until the Kafka-driven snapshot lands rather
