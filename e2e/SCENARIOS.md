@@ -24,7 +24,7 @@ Auth is a Bearer JWT from `/auth/admin/login` or `/auth/player/login`.
 
 | ID | Scenario | Request | Expected |
 |----|----------|---------|----------|
-| A1 | Admin login (valid) | POST /auth/admin/login `{publicName:admin, password:admin12345}` | 200, `token` present, `role=ADMIN` |
+| A1 | Admin login (valid) | POST /auth/admin/login `{publicName, password}` from `.env` | 200, `token` present, `role=ADMIN` |
 | A2 | Admin login wrong password | POST /auth/admin/login `{admin, WRONG}` | 401 |
 | A3 | Admin login unknown user | POST /auth/admin/login `{nobody, x}` | 401 |
 | A4 | `/auth/me` with valid token | GET /auth/me + Bearer | 200, `role=ADMIN`, `publicName=admin` |
@@ -251,5 +251,11 @@ AU1 until logs land). `payloadJson` is null on normal reads (only the hack-token
 ---
 
 **Runner:** `node e2e/run-scenarios.mjs` (no deps — uses Node 18+ global `fetch`).
-Env: `BASE` (default `http://localhost:8080/api`), `ADMIN_NAME`/`ADMIN_PASSWORD`
-(default `admin`/`admin12345`). Exit code is non-zero if any scenario fails.
+
+Credentials are read from the repository's `.env` (`BOOTSTRAP_ADMIN_NAME` /
+`BOOTSTRAP_ADMIN_PASSWORD`) — the same file the stack is started from, so a plain
+`node e2e/run-scenarios.mjs` works with nothing to export. Override with `BASE`,
+`ADMIN_NAME` or `ADMIN_PASSWORD` when pointing at another host.
+
+Exit codes: `0` all passed · `1` at least one scenario failed · `2` no admin
+password could be resolved · `3` the runner itself crashed.

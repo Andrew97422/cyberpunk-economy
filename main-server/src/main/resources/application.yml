@@ -22,7 +22,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:game_core}
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 4
@@ -101,7 +101,7 @@ springdoc:
 
 app:
   security:
-    jwt-secret: ${APP_JWT_SECRET:change-me-change-me-change-me-very-secret}
+    jwt-secret: ${APP_JWT_SECRET}
     jwt-expiration-seconds: ${APP_JWT_EXPIRATION_SECONDS:3600}
     pin-session-expiration-seconds: ${APP_PIN_SESSION_EXPIRATION_SECONDS:1800}
     admin-session-expiration-seconds: ${APP_ADMIN_SESSION_EXPIRATION_SECONDS:43200}

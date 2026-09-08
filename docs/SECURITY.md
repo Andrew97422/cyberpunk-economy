@@ -55,9 +55,13 @@
       во внутренней docker-сети.
 - [ ] **Swagger/springdoc** и `actuator` (`show-details: always`) — выключить/закрыть авторизацией
       в проде.
-- [ ] **In-code dev-дефолты** (`admin12345`, `postgres`, `change-me…` в `application.yml` и
-      `AdminBootstrap.java`) — оставлены для локального dev; в деплое перекрыты обязательными env.
-      На Фазе 0 заменить на fail-fast без дефолта.
+- [x] **In-code dev-дефолты убраны (2026-09-08).** `${DB_PASSWORD}`, `${APP_JWT_SECRET}` и
+      `${BOOTSTRAP_ADMIN_PASSWORD}` объявлены во всех 10 `application.yml` и в
+      `AdminBootstrap.java` **без значения по умолчанию** — Spring падает на старте с
+      `Could not resolve placeholder`, если переменная не задана. Раньше там лежали
+      `postgres`, `change-me-change-me-…` и `admin12345`: в публичном репозитории такой
+      дефолт JWT-секрета означал бы подделку админ-токенов на любом развёрнутом без `.env`
+      стенде. Проверено: все три топологии Compose передают эти переменные каждому сервису.
 - [ ] **Секрет-менеджер** (Vault / SOPS / Sealed-Secrets) вместо `.env` при переходе на k3s.
 - [ ] **Ротация по расписанию** и разные секреты на окружение.
 - [ ] **TLS** на входе (сейчас LAN-HTTP) при выходе за пределы доверенной сети.

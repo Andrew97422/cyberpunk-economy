@@ -31,7 +31,7 @@ jobs:
             echo "BOOTSTRAP_ADMIN_PASSWORD=$(openssl rand -hex 12)"
             echo "AUDIT_HACK_TOKEN="
           } > .env
-          echo "ADMIN_PASSWORD=$(grep BOOTSTRAP_ADMIN_PASSWORD .env | cut -d= -f2)" >> "$GITHUB_ENV"
+          # e2e/config.mjs reads this same .env, so nothing else has to be exported.
 
       - name: Bring the stack up
         run: docker compose up -d --build --wait --wait-timeout 900
@@ -47,9 +47,6 @@ jobs:
           echo "::error::gateway did not become healthy"; exit 1
 
       - name: Run scenarios
-        env:
-          BASE: http://localhost:8080/api
-          ADMIN_NAME: admin
         run: node e2e/run-scenarios.mjs
 
       - name: Container logs on failure

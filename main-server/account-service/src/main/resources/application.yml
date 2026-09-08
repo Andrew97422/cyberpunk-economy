@@ -15,7 +15,7 @@ spring:
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:accounts_db}
     username: ${DB_USER:postgres}
-    password: ${DB_PASSWORD:postgres}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 4
@@ -68,4 +68,4 @@ logging:
 app:
   bootstrap:
     admin-public-name: ${BOOTSTRAP_ADMIN_NAME:admin}
-    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD:admin12345}
+    admin-password: ${BOOTSTRAP_ADMIN_PASSWORD}

@@ -30,7 +30,7 @@
                        │   └───┬───────┬───────┬───────┬───────┬───────┬───────┬──────────┘ │
                        │       ▼       ▼       ▼       ▼       ▼       ▼       ▼            │
                        │   banking  account access  card  terminal market  news  audit  analytics
-                       │   :8081    :8082  :8083  :8085  :8086  :8087  :8088 :8084  :8091  │
+                       │   :8081    :8082  :8083  :8085  :8086  :8087  :8089 :8084  :8091  │
                        │       └───────┴───────┴───────┴───────┴───────┴───────┴──────────┘ │
                        │                              │ JDBC                                 │
                        │                     ┌────────▼─────────┐                            │
@@ -55,7 +55,7 @@
 | **card-service** | 8085 | Привязка физических карт к аккаунтам | `card_bindings`, `account_snapshot` |
 | **terminal-service** | 8086 | Платёжные терминалы | `terminals` |
 | **marketplace-service** | 8087 | Магазин: товары, заказы, ценовые сценарии и их расписание | `products`, `market_orders`, `scenarios`, `scenario_schedules`, `pending_steps` |
-| **news-service** | 8088 | Новостная лента | `news_posts` |
+| **news-service** | 8089 | Новостная лента (в контейнере :8088, наружу проброшен 8089) | `news_posts` |
 | **audit-service** | 8084 | Аудит событий; «флешка бога» (hack-токен) | `audit_logs` |
 | **analytics-service** | 8091 | Аналитические выборки (read-model поверх событий/БД) | — |
 | **frontend** | 80 | SPA (Vite + TS) за nginx, reverse-proxy `/api` → gateway | — |
@@ -102,6 +102,7 @@
    Запуск: `СТАРТ.cmd` или `docker compose up -d --build`. Конфиг — `.env` (см. `.env.example`).
 2. **Мульти-машинный (3 ноута):** `compose.core.yaml` (Kafka+gateway), `compose.finance.yaml`
    (banking/account/access + их БД), `compose.rest.yaml` (card/terminal/market/news/audit).
+   ⚠️ `analytics-service` в сплит-топологии отсутствует — аналитика доступна только в одиночном варианте.
    Конфиг — `.env` из `.env.multi.example`, ключевой параметр `CORE_HOST`. См. `DEPLOY-MULTI.md`.
 
 Инфраструктура события: локальный DNS (`bank.lan`/`game.lan`), скрипты эксплуатации в

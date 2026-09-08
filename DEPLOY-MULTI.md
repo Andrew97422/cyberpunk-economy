@@ -47,7 +47,7 @@ but starting machine 1 first avoids noisy startup logs.
 # From machine 1 (or any LAN host):
 curl -s -X POST http://<machine1-ip>:8080/api/auth/admin/login \
   -H 'Content-Type: application/json' \
-  -d '{"publicName":"admin","password":"admin12345"}'
+  -d "{\"publicName\":\"$BOOTSTRAP_ADMIN_NAME\",\"password\":\"$BOOTSTRAP_ADMIN_PASSWORD\"}"
 # → 200 with a token means gateway ↔ account/access (on machine 2) work over Kafka.
 
 # Full integration suite (run from anywhere on the LAN):

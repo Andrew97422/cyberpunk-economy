@@ -23,7 +23,7 @@ public class AdminBootstrap implements CommandLineRunner {
     @Value("${app.bootstrap.admin-public-name:admin}")
     private String adminPublicName;
 
-    @Value("${app.bootstrap.admin-password:admin12345}")
+    @Value("${app.bootstrap.admin-password}")
     private String adminPassword;
 
     @Override

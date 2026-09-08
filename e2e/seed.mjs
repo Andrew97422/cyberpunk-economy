@@ -1,12 +1,12 @@
 #!/usr/bin/env node
 // Cyberpunk demo seed for the LARP stack (Night City flavour).
 // Run against a FRESH stack (docker compose down -v && up -d) for a clean dataset.
-//   node e2e/seed.mjs
-// Env: BASE (default http://localhost:8080/api), ADMIN_NAME/ADMIN_PASSWORD.
+//   node e2e/seed.mjs                   # credentials are read from ./.env
+// Override with BASE / ADMIN_NAME / ADMIN_PASSWORD.
 
-const BASE = process.env.BASE || 'http://localhost:8080/api';
-const ADMIN_NAME = process.env.ADMIN_NAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin12345';
+import { BASE, ADMIN_NAME, ADMIN_PASSWORD, requireAdminPassword } from './config.mjs';
+
+requireAdminPassword('seed.mjs');
 
 async function req(method, path, { token, body } = {}) {
   const h = { 'Content-Type': 'application/json' };

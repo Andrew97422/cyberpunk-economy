@@ -335,13 +335,19 @@ See [DEPLOY-MULTI.md](DEPLOY-MULTI.md).
 ## Testing
 
 ```bash
-node e2e/seed.mjs            # optional: seed demo accounts, products, news
-node e2e/run-scenarios.mjs   # BASE=... ADMIN_NAME=... ADMIN_PASSWORD=... to override
+node e2e/run-scenarios.mjs   # against a running stack — that is the whole command
+node e2e/seed.mjs            # optional: demo accounts, products, news
 ```
 
-139 assertions driven through the real gateway — auth, accounts, PINs, banking in both admin and
-player context, sessions, audit — including the asynchronous account→banking propagation, which the
-runner retries until the Kafka-driven snapshot lands. Every expected status code is documented in
+Credentials come from the same `.env` the stack was started with, so there is nothing to export;
+`BASE`, `ADMIN_NAME` and `ADMIN_PASSWORD` override it when pointing at another host. Exit code is
+`0` on a clean run, `1` if any scenario failed.
+
+**139 assertions across 14 groups** driven through the real gateway — health, auth (admin, player
+and logout), accounts, PINs, sessions, banking in both admin and player context, player
+self-service, cards, terminals, marketplace, news and audit. That includes the asynchronous
+account→banking propagation, which the runner retries until the Kafka-driven snapshot lands rather
+than sleeping a fixed interval. Every expected status code is documented in
 [`e2e/SCENARIOS.md`](e2e/SCENARIOS.md).
 
 CI builds all 10 Maven projects in parallel, type-checks and builds the SPA, validates every
@@ -402,6 +408,8 @@ An MVP built to a date, documented as one rather than dressed up:
 - **No consumer-side dedup** — delivery is at-least-once and consumers are not idempotent. A
   `processed_events` table was migrated in as an inbox but is not wired up yet; producer-side
   idempotence and the per-operation idempotency keys cover the money path, not the projections.
+- **The split topology is incomplete** — `analytics-service` exists only in the single-host
+  Compose file, so the 3-machine deployment runs without the read model.
 - **Network surface** — worker ports and Postgres are published to the host, acceptable on an
   isolated LAN and wrong anywhere else.
 - **Observability** — audit, analytics and Actuator metrics exist, but there is no centralised

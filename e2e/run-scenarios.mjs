@@ -2,12 +2,12 @@
 // E2E / integration runner for the Cyberpunk LARP backend gateway.
 // No dependencies: uses Node 18+ global fetch. See SCENARIOS.md for the catalog.
 //
-//   node e2e/run-scenarios.mjs
-//   BASE=http://localhost:8080/api ADMIN_NAME=admin ADMIN_PASSWORD=admin12345 node e2e/run-scenarios.mjs
+//   node e2e/run-scenarios.mjs          # credentials are read from ./.env
+//   BASE=http://host:8080/api ADMIN_PASSWORD=... node e2e/run-scenarios.mjs
 
-const BASE = process.env.BASE || 'http://localhost:8080/api';
-const ADMIN_NAME = process.env.ADMIN_NAME || 'admin';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin12345';
+import { BASE, ADMIN_NAME, ADMIN_PASSWORD, requireAdminPassword } from './config.mjs';
+
+requireAdminPassword('run-scenarios.mjs');
 const TS = Date.now();
 const NAME = (s) => `e2e_${s}_${TS}`;
 

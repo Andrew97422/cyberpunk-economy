@@ -1,7 +1,7 @@
 ﻿<#
 .SYNOPSIS
   ПОЛНОЕ обнуление данных: удаляет тома (БД + Kafka + медиа) и поднимает стек
-  заново с чистого листа. Останется только админ (admin/admin12345) и рантайм-
+  заново с чистого листа. Останется только админ (из BOOTSTRAP_ADMIN_* в .env) и рантайм-
   дефолты — без товаров, операций, сессий и прочих данных.
 
   ⚠️ НЕОБРАТИМО. Все данные игры будут стёрты. Используй ПЕРЕД мероприятием/сменой,
@@ -39,4 +39,4 @@ try {
 Write-Host "`n=== Поднимаю чистый стек ===" -ForegroundColor Cyan
 & (Join-Path $PSScriptRoot "start-all.ps1") -Project $Project -ComposeFile $ComposeFile
 
-Write-Host "`nГотово. Данные обнулены, остался только админ (admin/admin12345)." -ForegroundColor Green
+Write-Host "`nГотово. Данные обнулены, остался только админ из .env (BOOTSTRAP_ADMIN_NAME)." -ForegroundColor Green
